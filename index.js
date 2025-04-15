@@ -6,12 +6,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// Serve static frontend files
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
-const WEAR_API = 'https://avatar.roblox.com/v1/avatar/assets';
 
 app.post('/autowear', async (req, res) => {
   const { roblosecurity } = req.body;
@@ -20,17 +17,41 @@ app.post('/autowear', async (req, res) => {
     return res.status(400).json({ error: 'Missing .ROBLOSECURITY cookie' });
   }
 
-  try {
-    const accessories = [607702162, 2646473721];
+  const accessories = [607702162, 2646473721];
+  const baseUrl = 'https://avatar.roblox.com/v1/avatar/assets';
 
+  try {
+    // Step 1: Get CSRF Token
+    let csrfToken = '';
+    try {
+      await axios.post(
+        baseUrl,
+        { assetId: accessories[0] },
+        {
+          headers: {
+            Cookie: `.ROBLOSECURITY=${roblosecurity}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } catch (err) {
+      csrfToken = err.response.headers['x-csrf-token'];
+    }
+
+    if (!csrfToken) {
+      return res.status(500).json({ error: 'Failed to retrieve CSRF token' });
+    }
+
+    // Step 2: Send authenticated POST requests
     for (let assetId of accessories) {
       await axios.post(
-        WEAR_API,
+        baseUrl,
         { assetId },
         {
           headers: {
+            Cookie: `.ROBLOSECURITY=${roblosecurity}`,
             'Content-Type': 'application/json',
-            'Cookie': `.ROBLOSECURITY=${roblosecurity}`
+            'X-CSRF-TOKEN': csrfToken
           }
         }
       );
@@ -46,7 +67,6 @@ app.post('/autowear', async (req, res) => {
   }
 });
 
-// Handle root path
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
